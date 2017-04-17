@@ -18,7 +18,7 @@ import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
 /**
- * Hello world!
+ * Project Phase 3
  *
  */
 public class App {
@@ -27,7 +27,6 @@ public class App {
 
 		// Load our input data.
 		JavaRDD<String> input = sc.textFile(args[0]);
-
 		// Split up into lines.
 		JavaRDD<String> words = input.flatMap(new FlatMapFunction<String, String>() {
 			/**
@@ -38,10 +37,16 @@ public class App {
 			public Iterator<String> call(String x) {
 				ArrayList<String> output = new ArrayList<String>();
 				StringTokenizer s = new StringTokenizer(x, ",");
+				s.nextToken();
 				String time = s.nextToken();
-				int index = time.indexOf("/", 2);
-				time = time.substring(2, index);
+				int index = time.indexOf("-");
+				if (index == -1)
+					return output.iterator();
+				time = time.substring(8, 10);
 				int date = Integer.parseInt(time);
+				s.nextToken();
+				s.nextToken();
+				s.nextToken();
 				String longitude = s.nextToken();
 				String latitude = s.nextToken();
 
@@ -81,8 +86,8 @@ public class App {
 					}
 
 				});
-		List<Tuple2<Integer, String>> first50 = swappedPair.sortByKey(false).take(50);
-		
+		List<Tuple2<Integer, String>> first50 = swappedPair.sortByKey(false).take(100);
+
 		JavaPairRDD<Integer, String> finalOut = sc.parallelizePairs(first50);
 		// Save the 50 hottest spot back out to a text file
 		finalOut.values().saveAsTextFile(args[1]);
@@ -94,11 +99,11 @@ public class App {
 			for (int b = -1; b < 2; b++) {
 				for (int c = -1; c < 2; c++) {
 					DecimalFormat df = new DecimalFormat("####");
-					//df.setRoundingMode(RoundingMode.DOWN);
-					int t = time + a;
-					double lo = (lon + b * 0.01) * 100;
+					df.setRoundingMode(RoundingMode.DOWN);
+					int t = time + a - 1;
+					double lo = (lon + b * 0.01 - 0.01) * 100;
 					double la = (lat + c * 0.01) * 100;
-					String str = df.format(la)+ "," + df.format(lo) + "," + t;
+					String str = df.format(la) + "," + df.format(lo) + "," + t;
 					out[(a + 1) * 9 + (b + 1) * 3 + c + 1] = str;
 				}
 			}
